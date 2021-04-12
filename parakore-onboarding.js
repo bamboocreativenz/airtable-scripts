@@ -44,6 +44,8 @@ async function createRopu(){
         "Clean Paper Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
         "Cardboard Recycling Bin Volume": record.getCellValue("Other Recycling Volume"),
         "Arrival Process": record.getCellValue("Arrival Process"),
+        "Support Now": record.getCellValue('Support Now'),
+        "Support Ongoing": record.getCellValue('Support Ongoing'),
         "Preferred Comms": record.getCellValue("Best Comms")[0],
         "Signed Up": true,
         "Date Signed": record.getCellValue("Date Created"),
@@ -117,7 +119,8 @@ async function updateRopu(id){
         "Physical Adress": record.getCellValue('Rōpū Address'),
         "Rōpū Phone": record.getCellValue('Rōpū Phone'),
         "Profile Image": ropuRecord.getCellValue('Profile Image').map(p => ({url: p.url})).concat(record.getCellValue('Rōpū Photo').map(p => ({url: p.url}))),
-        "Rohe": [{ id:record.getCellValue('Rohe')[0].id }],
+        // We need to concat the new value on the old in case one doesn't exist - than make sure we only return 1 as the field is meant to only have one rohe
+        "Rohe": [{id:record.getCellValue('Rohe').concat(ropuRecord.getCellValue('Rohe'))[0].id}],
         "General Waste Bin Volume": record.getCellValue('General Waste Volume'),
         "General Recycling Bin Volume": record.getCellValue('General Recycling Volume'),
         "Glass Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
@@ -129,11 +132,13 @@ async function updateRopu(id){
         "Clean Paper Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
         "Cardboard Recycling Bin Volume": record.getCellValue("Other Recycling Volume"),
         "Arrival Process": record.getCellValue("Arrival Process"),
+        "Support Now": record.getCellValue('Support Now'),
+        "Support Ongoing": record.getCellValue('Support Ongoing'),
         "Preferred Comms": record.getCellValue("Best Comms")[0],
         "Signed Up": true,
         "Date Signed": record.getCellValue("Date Created"),
         Users: record.getCellValue("Kaiārahi"),
-        "Regional Contacts": record.getCellValue("Council"),
+        "Regional Contacts": [{id:record.getCellValue('Council').concat(ropuRecord.getCellValue('Council'))[0].id}],
         Onboarding: [{id: RecordId}]
     })
     .then(async () => {
