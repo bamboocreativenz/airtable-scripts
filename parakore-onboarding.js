@@ -7,11 +7,22 @@ const hazardsTable = base.getTable("Hazards")
 const peopleTable = base.getTable("People")
 const iwiTable = base.getTable("Iwi/Hapu")
 
-const query = await onboardingTable.selectRecordsAsync()
-const record = query.getRecord(RecordId)
+const onboardingQuery = await onboardingTable.selectRecordsAsync()
+const record = onboardingQuery.getRecord(RecordId)
 
 if (Status == 'Approved') {
-    createRopu()
+    updateOrCreate()
+}
+
+async function updateOrCreate(){
+    const ropuQuery = await ropuTable.selectRecordsAsync()
+    const ropuRecord = await ropuQuery.records.find((r) => r.getCellValue('Rōpū Email') == record.getCellValue('Rōpū Email'))
+
+    if (ropuRecord.id != undefined || ropuRecord.id != null) {
+        updateRopu(ropuRecord.id)
+    } else {
+        createRopu()
+    }
 }
 
 async function createRopu(){
@@ -22,7 +33,7 @@ async function createRopu(){
         "Rōpū Email": record.getCellValue('Rōpū Email'),
         "Profile Image": record.getCellValue('Rōpū Photo'),
         "Rohe": [{ id:record.getCellValue('Rohe')[0].id }],
-        "General Rubbish Bin Volume": record.getCellValue('General Rubbish Volume'),
+        "General Waste Bin Volume": record.getCellValue('General Waste Volume'),
         "General Recycling Bin Volume": record.getCellValue('General Recycling Volume'),
         "Glass Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
         "Plastic Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
@@ -32,9 +43,10 @@ async function createRopu(){
         "Dirty Paper Composting Bin Volume": record.getCellValue('Other Recycling Volume'),
         "Clean Paper Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
         "Cardboard Recycling Bin Volume": record.getCellValue("Other Recycling Volume"),
-        "Signed MOU": record.getCellValue("Pare Kore Commitment"),
         "Arrival Process": record.getCellValue("Arrival Process"),
         "Preferred Comms": record.getCellValue("Best Comms")[0],
+        "Signed Up": true,
+        "Date Signed": record.getCellValue("Date Created"),
         Users: record.getCellValue("Kaiārahi"),
         "Regional Contacts": record.getCellValue("Council"),
         Onboarding: [{id: RecordId}]
@@ -58,7 +70,7 @@ async function createRopu(){
         var firstDay = new Date(y, m - 1, 1);
         var lastDay = new Date(y, m, 0);
         await wasteTable.createRecordAsync({
-            "Number of General Rubbish Bins": record.getCellValue('General Rubbish Last Month'),
+            "Number of General Waste Bins": record.getCellValue('General Waste Last Month'),
             "Number of General Recycling Bins": record.getCellValue('General Recycling Last Month'),
             "Number of Garden Waste Composting bins": record.getCellValue('Organic/Garden Waste Last Month'),
             // TODO "": record.getCellValue('Other Recycling Last Month'),
@@ -83,8 +95,99 @@ async function createRopu(){
             Name: record.getCellValue("Champion Name"),
             "Email - Primary": record.getCellValue("Champion Email"),
             Phone: record.getCellValue("Champion Phone"),
-            "Rōpū Primary Contact": [{id: ropuId}]
+            "Member of Rōpū": [{id: ropuId}],
+            Champion: true
         })
+    })
+    .catch( err => {
+        console.error(err)
+        throw new Error(err)
+    })
+}
+
+/**
+ * @param {string} id
+ */
+async function updateRopu(id){
+    return await ropuTable.updateRecordAsync(id, {
+        Name: record.getCellValue('Rōpū Name'),
+        "Physical Adress": record.getCellValue('Rōpū Address'),
+        "Rōpū Phone": record.getCellValue('Rōpū Phone'),
+        "Profile Image": record.getCellValue('Rōpū Photo'),
+        "Rohe": [{ id:record.getCellValue('Rohe')[0].id }],
+        "General Waste Bin Volume": record.getCellValue('General Waste Volume'),
+        "General Recycling Bin Volume": record.getCellValue('General Recycling Volume'),
+        "Glass Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
+        "Plastic Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
+        "Garden waste Bin Volume": record.getCellValue('Organic/Garden Waste Volume'),
+        "Food Composting Bin Volume": record.getCellValue('Food Waste Volume'),
+        "Cans Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
+        "Dirty Paper Composting Bin Volume": record.getCellValue('Other Recycling Volume'),
+        "Clean Paper Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
+        "Cardboard Recycling Bin Volume": record.getCellValue("Other Recycling Volume"),
+        "Arrival Process": record.getCellValue("Arrival Process"),
+        "Preferred Comms": record.getCellValue("Best Comms")[0],
+        "Signed Up": true,
+        "Date Signed": record.getCellValue("Date Created"),
+        Users: record.getCellValue("Kaiārahi"),
+        "Regional Contacts": record.getCellValue("Council"),
+        Onboarding: [{id: RecordId}]
+    })
+    .then(async () => {
+        if (record.getCellValue("Iwi Affiliation").name == "Yes") {
+            await ropuTable.updateRecordAsync(id, {
+                Iwi: record.getCellValue("Iwi")
+            })
+        } 
+        if (record.getCellValue("Iwi Affiliation").name == "New Iwi"){
+            await iwiTable.createRecordAsync({
+                Name: record.getCellValue("New Iwi"),
+                "Rōpū": [{id}]
+            }) 
+        }
+    })
+    .then(async () => {
+        var date = new Date(), y = date.getFullYear(), m = date.getMonth();
+        var firstDay = new Date(y, m - 1, 1);
+        var lastDay = new Date(y, m, 0);
+        await wasteTable.createRecordAsync({
+            "Number of General Waste Bins": record.getCellValue('General Waste Last Month'),
+            "Number of General Recycling Bins": record.getCellValue('General Recycling Last Month'),
+            "Number of Garden Waste Composting bins": record.getCellValue('Organic/Garden Waste Last Month'),
+            // TODO "": record.getCellValue('Other Recycling Last Month'),
+            "Number of Food Composting bins": record.getCellValue('Food Waste Last Month'),
+            "From": firstDay,
+            "To": lastDay,
+            Ropu: [{id}]
+        })
+    })
+    .then(async () => {
+        await hazardsTable.createRecordAsync({
+            "Date Identified": record.getCellValue("Date"),
+            "Details": record.getCellValue("Hazards"),
+            "Name": "Initial Site Hazards",
+            Ropu: [{id}]
+        })
+    })
+    .then(async () => {
+        const peopleQuery = await peopleTable.selectRecordsAsync()
+        const peopleRecord = await peopleQuery.records.find((r) => r.getCellValue('Email - Primary') == record.getCellValue('Champion Email'))
+
+        if (peopleRecord != undefined || peopleRecord != null) {
+            await peopleTable.updateRecordAsync(peopleRecord.id, {
+                // In case the peopleRecord already has associations with other ropu we need to concat the new id onto the existing
+                "Member of Rōpū": peopleRecord.getCellValue('Member of Rōpū').map(r => ({id: r.id})).concat([{id}]),
+                Champion: true
+            })
+        } else {
+            await peopleTable.createRecordAsync({
+                Name: record.getCellValue("Champion Name"),
+                "Email - Primary": record.getCellValue("Champion Email"),
+                Phone: record.getCellValue("Champion Phone"),
+                "Member of Rōpū": [{id}],
+                Champion: true
+            })
+        }
     })
     .catch( err => {
         console.error(err)
