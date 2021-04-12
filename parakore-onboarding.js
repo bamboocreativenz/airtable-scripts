@@ -109,11 +109,14 @@ async function createRopu(){
  * @param {string} id
  */
 async function updateRopu(id){
+    const ropuQuery = await ropuTable.selectRecordsAsync()
+    const ropuRecord = ropuQuery.getRecord(id)
+
     return await ropuTable.updateRecordAsync(id, {
         Name: record.getCellValue('Rōpū Name'),
         "Physical Adress": record.getCellValue('Rōpū Address'),
         "Rōpū Phone": record.getCellValue('Rōpū Phone'),
-        "Profile Image": record.getCellValue('Rōpū Photo'),
+        "Profile Image": ropuRecord.getCellValue('Profile Image').map(p => ({url: p.url})).concat(record.getCellValue('Rōpū Photo').map(p => ({url: p.url}))),
         "Rohe": [{ id:record.getCellValue('Rohe')[0].id }],
         "General Waste Bin Volume": record.getCellValue('General Waste Volume'),
         "General Recycling Bin Volume": record.getCellValue('General Recycling Volume'),
