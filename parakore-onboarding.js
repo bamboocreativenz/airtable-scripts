@@ -118,7 +118,12 @@ async function updateRopu(id){
         Name: record.getCellValue('Rōpū Name'),
         "Physical Adress": record.getCellValue('Rōpū Address'),
         "Rōpū Phone": record.getCellValue('Rōpū Phone'),
-        "Profile Image": ropuRecord.getCellValue('Profile Image').map(p => ({url: p.url})).concat(record.getCellValue('Rōpū Photo').map(p => ({url: p.url}))),
+        "Profile Image": 
+            ropuRecord.getCellValue('Profile Image') != null
+            ? record.getCellValue('Rōpū Photo') != null
+            ? ropuRecord.getCellValue('Profile Image').map(p => ({url: p.url})).concat(record.getCellValue('Rōpū Photo').map(p => ({url: p.url})))
+            : ropuRecord.getCellValue('Profile Image')
+            : record.getCellValue('Rōpū Photo'),
         // We need to concat the new value on the old in case one doesn't exist - than make sure we only return 1 as the field is meant to only have one rohe
         "Rohe": [{id:record.getCellValue('Rohe').concat(ropuRecord.getCellValue('Rohe'))[0].id}],
         "General Waste Bin Volume": record.getCellValue('General Waste Volume'),
@@ -138,7 +143,12 @@ async function updateRopu(id){
         "Signed Up": true,
         "Date Signed": record.getCellValue("Date Created"),
         Users: record.getCellValue("Kaiārahi"),
-        "Regional Contacts": [{id:record.getCellValue('Council').concat(ropuRecord.getCellValue('Council'))[0].id}],
+        "Regional Contacts": 
+            ropuRecord.getCellValue('Regional Contacts') != null
+            ? record.getCellValue('Council') != null
+            ? [{id:record.getCellValue('Council').concat(ropuRecord.getCellValue('Regional Contacts'))[0].id}]
+            : ropuRecord.getCellValue('Regional Contacts')
+            : record.getCellValue('Council'),
         Onboarding: [{id: RecordId}]
     })
     .then(async () => {
@@ -171,7 +181,7 @@ async function updateRopu(id){
     })
     .then(async () => {
         await hazardsTable.createRecordAsync({
-            "Date Identified": record.getCellValue("Date"),
+            "Date Identified": record.getCellValue('Date Created'),
             "Details": record.getCellValue("Hazards"),
             "Name": "Initial Site Hazards",
             Ropu: [{id}]
@@ -179,12 +189,16 @@ async function updateRopu(id){
     })
     .then(async () => {
         const peopleQuery = await peopleTable.selectRecordsAsync()
-        const peopleRecord = await peopleQuery.records.find((r) => r.getCellValue('Email - Primary') == record.getCellValue('Champion Email'))
+        const peopleRecord = peopleQuery.records.find((r) => r.getCellValue('Email - Primary')==record.getCellValue('Champion Email'))
 
         if (peopleRecord != undefined || peopleRecord != null) {
             await peopleTable.updateRecordAsync(peopleRecord.id, {
                 // In case the peopleRecord already has associations with other ropu we need to concat the new id onto the existing
-                "Member of Rōpū": peopleRecord.getCellValue('Member of Rōpū').map(r => ({id: r.id})).concat([{id}]),
+                "Member of Rōpū":
+                    // Check if there is an existing value and that the new relationship does not already exist
+                    peopleRecord.getCellValue('Member of Rōpū') != null && peopleRecord.getCellValue('Member of Rōpū').find((r => r.id == ropuRecord.id)) == null
+                    ? peopleRecord.getCellValue('Member of Rōpū').concat({id: ropuRecord.id, name: ropuRecord.name})
+                    : [{id}],
                 Champion: true
             })
         } else {
