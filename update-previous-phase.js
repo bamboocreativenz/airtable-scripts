@@ -22,11 +22,15 @@ let lastSurveys
 if (config.employeeIMName) {
     employeeRecordId = await findEmployeeRecordId(config.employeeIMName)
     lastSurveys = await orderSurveys(employeeRecordId)
+        // Filter out triggering recordId
+        .then((surveys) => surveys.filter((survey) => survey.id != config.recordId))
 
 // Else if YM is submitted first
 } else if(config.employeeYMName) {
     employeeRecordId = await findEmployeeRecordId(config.employeeYMName)
     lastSurveys = await orderSurveys(employeeRecordId)
+        // Filter out triggering recordId
+        .then((surveys) => surveys.filter((survey) => survey.id != config.recordId))
 }
 
 // If there is at least 1 previous survey
@@ -50,7 +54,7 @@ async function getlastSurvey(employeeRecordId, phaseNumber){
     })
 }
 
-// Order surveys by newest (highest phase number) to oldest (lowest phase number)
+// Order surveys by 
 async function orderSurveys(employeeRecordId){
     const surveys = await employeeQuery.getRecord(employeeRecordId).getCellValue('Survey  Records')
     return surveys.sort((p1, p2) => {
