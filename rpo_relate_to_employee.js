@@ -3,7 +3,7 @@ const clientTable = base.getTable('Clients');
 const employeeTable = base.getTable('Client Employees')
 const surveyTable = base.getTable('Survey Records')
 
-const employeeQuery = await employeeTable.selectRecordsAsync()
+const employeeQuery = await employeeTable.selectRecordsAsync({fields:['name','Survey  Records']})
 
 // Config
 const config = input.config();
@@ -17,6 +17,10 @@ const phaseNumber = Number(phase.match(/\d+/)[0]
 
 let employeeRecordId = ''
 let lastSurveys
+
+console.log('IMName: ',config.employeeIMName)
+console.log('YMName: ',config.employeeYMName)
+
 
 // If IM is submitted first
 if (config.employeeIMName) {
@@ -42,6 +46,7 @@ if (lastSurveys) {
 }
 async function findEmployeeRecordId(name){
     const record = employeeQuery.records.find((record) => record.getCellValue('name') == name)
+    console.log(record)
     if (record) {
         return record.id
     } else {
@@ -52,7 +57,8 @@ async function findEmployeeRecordId(name){
 // Reduce through array of previous phases and find the one which has a Phase number less than 1 than the current
 async function getlastSurvey(employeeRecordId, phaseNumber){
     const surveys = await employeeQuery.getRecord(employeeRecordId).getCellValue('Survey  Records')
-    return surveys.reduce((accumulator, record) => {
+    // @ts-ignore
+    return surveys.reduce((_accumulator, record) => {
         return Number(record.name.match(/\d+/)[0]) == phaseNumber - 1
         ? record
         : null
