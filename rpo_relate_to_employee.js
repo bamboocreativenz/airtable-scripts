@@ -15,41 +15,27 @@ const phaseNumber = Number(phase.match(/\d+/)[0]
 // Than determine the single last phase
 // Than update the survey record with the employee and survey recordIds
 
-let employeeRecordId = ''
-let lastSurveys
+let employeeRecordId = await findEmployeeRecordId(config.employeeName)
 
-console.log('IMName: ',config.employeeIMName)
-console.log('YMName: ',config.employeeYMName)
+console.log('Name: ',config.employeeName)
 
-
-// If IM is submitted first
-if (config.employeeIMName) {
-    employeeRecordId = await findEmployeeRecordId(config.employeeIMName)
-    if (employeeRecordId.length > 1){
-     lastSurveys = await orderSurveys(employeeRecordId).then((surveys) => surveys.filter((survey) => survey.id != config.recordId))
-    }
-
-// Else if YM is submitted first
-} else if(config.employeeYMName) {
-    employeeRecordId = await findEmployeeRecordId(config.employeeYMName)
-    if (employeeRecordId.length > 1){
-     lastSurveys = await orderSurveys(employeeRecordId).then((surveys) => surveys.filter((survey) => survey.id != config.recordId))
-    }
-}
-
-// If there is at least 1 previous survey
-// Update the survey with the last survey
-if (lastSurveys) {
-    await surveyTable.updateRecordAsync(config.recordId, {
+if (employeeRecordId.length > 1){
+    surveyTable.updateRecordAsync(config.recordId, {employee_id: [{id: employeeRecordId}]})
+    await orderSurveys(employeeRecordId)
+    .then((surveys) => surveys.filter((survey) => survey.id != config.recordId))
+    .then((lastSurveys) => surveyTable.updateRecordAsync(config.recordId, {
         "Previous Phases": lastSurveys
-    })
+    }))
+    .catch(err => console.error(err))
 }
+
 async function findEmployeeRecordId(name){
     const record = employeeQuery.records.find((record) => record.getCellValue('name') == name)
-    console.log(record)
     if (record) {
+        console.log('Employee Record ID: ', record.id)
         return record.id
     } else {
+        console.log('No Employee Found')
         return ''
     }
 }
