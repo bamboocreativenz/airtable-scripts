@@ -7,9 +7,17 @@ const dataTable = base.getTable('NZFN Data CamelCase')
 // Get Record
 const record = await dataTable.selectRecordAsync(recordId)
 
+const recordWithFields = dataTable.fields.map(field => {
+    return{
+        ...field, 
+        // @ts-ignore
+        value: record.getCellValue(field.name)
+    }
+})
+
 if(record){
-  const firebaseUrl = ''
-  const functionSecret = ''
+  const firebaseUrl = 'XXXXXXXX'
+  const functionSecret = 'XXXXXXXX'
   
   // Need error handling
   try {
@@ -21,10 +29,9 @@ if(record){
       body: JSON.stringify({
         apiKey: functionSecret, // change to a basicAuth header?
         // @ts-ignore
-        record
+        record: recordWithFields
       })
     })
-    
     if(result.status == 200) {
       dataTable.updateRecordAsync(recordId, {'recordSentToHub': true})
     }
