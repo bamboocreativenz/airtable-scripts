@@ -35,5 +35,5 @@ Promise.all(allPeople.map(async person => {
 .then(people => people.filter(p => p.weeksAvailability > p.weeksDemand))
 // Add the remaining people back to the week
 .then(people => {
-  weeksTable.updateRecordAsync(recordId, {"Whos Available": people.map(p => ({id: p.id}))})
+  weeksTable.updateRecordAsync(recordId, {"Recalculate Available": false, "Whos Available": people.map(p => ({id: p.id}))})
 })
