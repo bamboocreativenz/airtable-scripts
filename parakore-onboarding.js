@@ -1,3 +1,4 @@
+// @ts-nocheck
 const { RecordId } = input.config()
 
 const onboardingTable = base.getTable("Onboarding")
@@ -13,16 +14,14 @@ const date = new Date(), y = date.getFullYear(), m = date.getMonth() + 1;
 const firstDay = new Date(y, (Math.ceil(m/4)*3)-3, 1);
 const lastDay = new Date(y, (Math.ceil(m/4)*3), 0);
 
-const quarterQuery = await quarterTable.selectRecordsAsync()
+const quarterQuery = await quarterTable.selectRecordsAsync({fields: quarterTable.fields})
 
 const quarter = quarterQuery.records.find((r) => {
     return new Date(r.getCellValue('From')) >= firstDay && new Date(r.getCellValue('To')) <= lastDay
 })
 
-console.log(quarter)
-
 // Onboarding Record
-const onboardingQuery = await onboardingTable.selectRecordsAsync()
+const onboardingQuery = await onboardingTable.selectRecordsAsync({fields: onboardingTable.fields})
 const record = onboardingQuery.getRecord(RecordId)
 
 const missingRecordsMDList = 'Missing:'.concat(
@@ -40,7 +39,7 @@ if (record.getCellValue('Rōpū Email') != null && record.getCellValue('Rohe') !
 }
 
 async function updateOrCreate(){
-    const ropuQuery = await ropuTable.selectRecordsAsync()
+    const ropuQuery = await ropuTable.selectRecordsAsync({fields: ropuTable.fields})
 
     const ropuRecord = ropuQuery.records.find((r) => {
         if (r.getCellValue('Rōpū Email') != null) {
@@ -49,9 +48,83 @@ async function updateOrCreate(){
     })
 
     if (ropuRecord != undefined && ropuRecord.id != undefined || ropuRecord != undefined && ropuRecord.id != null) {
-        updateRopu(ropuRecord.id)
+        return await updateRopu(ropuRecord.id)
+        .catch(async err => {
+            console.error(err.message)
+        })
     } else {
-        createRopu()
+        return await createRopu()
+        .catch(async err => {
+            console.error(err.message)
+        })
+    }
+}
+
+//console.log(onboardingTable.fields.find(f => f.name == 'Ropu Type'))
+
+/**
+ * Map the Ropu type from the onboarding table to the Ropu Table
+ * @param {string} onboarding table ropu type field select option id
+ * @return {string} ropu table type field select option id
+*/
+function mapRopuType(onboardingTypeOptionId){
+    switch (onboardingTypeOptionId){
+        // Marae
+        case "selBWnpBpPolJAVMo":
+            return "selrBmdLq00lkOjWc"
+        // Kura
+        case "seldxeFsMfoQK5g0t":
+            return "seltTF0HrLKYdTkBQ"
+        // Pakihi
+        case "selHDAf1yAourRJA2":
+            return "selCFUGtye2Z3mCrU"
+        // Kōhungahunga
+        case "selp0I3jvOaF8kn0P":
+            return "selcSQYLVQ1ixEVt3"
+        // Whānau
+        case "selZ3zkt8tsRGNMQw":
+            return "selyzuAUqTCIFZ5dP"
+        // Hāpori
+        case "selJnZ9GTAeKpzngO":
+            return "selCsKOYQIrTC1EAp"
+        default:
+            return null
+    }
+}
+
+/**
+ * Get Select Id for Ropu Table Bin Volume field 
+ * @param {string} name
+ * @return {string} select option id
+*/
+function getBinVolumeSelectId(name){
+    switch (name){
+        // Food Compost Bin (25L)
+        case "Food Compost Bin (25L)":
+            return "selQkKc1UG5qtCNtR"
+        // Crate (60ltr)
+        case "Crate (60ltr)":
+            return "seliijfShodLH1uQD"
+        // Standard Black Bag (65L)
+        case "Standard Black Bag (65L)":
+            return "selWLvjN7H9FIbINx"
+        // Big Ben Black Bag (80L)
+        case "Big Ben Black Bag (80L)":
+            return "selJXZWCD2UtALw0x"
+        // Small Wheelie Bin (140L)
+        case "Small Wheelie Bin (140L)":
+            return "sel1kJKDTWTfNW9H7"
+        // Green Bin (240L)
+        case "Green Bin (240L)":
+            return "selcYqT9Wrzju10Pl"
+        // Small Skip (1000L)
+        case "Small Skip (1000L)":
+            return "selr7d4VvmpP5LKmB"
+        // Standard Skip (2000L)
+        case "Standard Skip (2000L)":
+            return "selhPKHeXA69F9FDv"
+        default:
+            return "selcYqT9Wrzju10Pl"
     }
 }
 
@@ -63,7 +136,8 @@ async function createRopu(){
         "Rōpū Email": record.getCellValue('Rōpū Email') && record.getCellValue('Rōpū Email').trim(),
         "Profile Image": record.getCellValue('Rōpū Photo'),
         "Rohe": [{ id:record.getCellValue('Rohe')[0].id }],
-        "General Waste Bin Volume": record.getCellValue('General Waste Volume'),
+        "General Waste Bin Volume": {id: getBinVolumeSelectId(record.getCellValue('General Waste Volume').name)},
+        Type: {id: mapRopuType(record.getCellValue('Ropu Type').id)},
         "General Recycling Bin Volume": record.getCellValue('General Recycling Volume'),
         "Glass Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
         "Plastic Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
@@ -83,7 +157,7 @@ async function createRopu(){
         "Regional Contacts": record.getCellValue("Council"),
         Onboarding: [{id: RecordId}],
         Tags: record.getCellValue('Tags'),
-        "Metrics": [{id: 'reczaOiu8zwtxeBYZ'}]
+        "PK Metrics": [{id: 'reczaOiu8zwtxeBYZ'}]
     })
     .then(async ropuId => {
         if (record.getCellValue("Iwi Affiliation").name == "Yes") {
@@ -98,6 +172,9 @@ async function createRopu(){
             }) 
         }
         return ropuId
+    }, async err => {
+        await onboardingTable.updateRecordAsync(RecordId,{ Status: { name: 'Missing Data' },"Missing Data Reason": "OTHER ERROR - CALL DAN\n" + err.message })
+        throw new Error(err.message)
     })
     .then(async ropuId => {
         await wasteTable.createRecordAsync({
@@ -131,17 +208,13 @@ async function createRopu(){
             Champion: true
         })
     })
-    .catch( err => {
-        console.error(err)
-        throw new Error(err)
-    })
 }
 
 /**
  * @param {string} id
  */
 async function updateRopu(id){
-    const ropuQuery = await ropuTable.selectRecordsAsync()
+    const ropuQuery = await ropuTable.selectRecordsAsync({fields: ropuTable.fields})
     const ropuRecord = ropuQuery.getRecord(id)
 
     return await ropuTable.updateRecordAsync(id, {
@@ -156,7 +229,8 @@ async function updateRopu(id){
             : record.getCellValue('Rōpū Photo'),
         // We need to concat the new value on the old in case one doesn't exist - than make sure we only return 1 as the field is meant to only have one rohe
         "Rohe": record.getCellValue('Rohe'),
-        "General Waste Bin Volume": record.getCellValue('General Waste Volume'),
+        "General Waste Bin Volume": {id: getBinVolumeSelectId(record.getCellValue('General Waste Volume').name)},
+        Type: {id: mapRopuType(record.getCellValue('Ropu Type').id)},
         "General Recycling Bin Volume": record.getCellValue('General Recycling Volume'),
         "Glass Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
         "Plastic Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
@@ -181,7 +255,7 @@ async function updateRopu(id){
             : record.getCellValue('Council'),
         Onboarding: [{id: RecordId}],
         Tags: record.getCellValue('Tags'),
-        "Metrics": [{id: 'reczaOiu8zwtxeBYZ'}]
+        "PK Metrics": [{id: 'reczaOiu8zwtxeBYZ'}]
     })
     .then(async () => {
         if (record.getCellValue("Iwi Affiliation").name == "Yes") {
@@ -195,6 +269,9 @@ async function updateRopu(id){
                 "Rōpū": [{id}]
             }) 
         }
+    }, async err => {
+        await onboardingTable.updateRecordAsync(RecordId,{ Status: { name: 'Missing Data' },"Missing Data Reason": "OTHER ERROR - CALL DAN\n" + err.message })
+        throw new Error(err.message)
     })
     .then(async () => {
         await wasteTable.createRecordAsync({
@@ -240,9 +317,5 @@ async function updateRopu(id){
                 Champion: true
             })
         }
-    })
-    .catch( err => {
-        console.error(err)
-        throw new Error(err)
     })
 }
