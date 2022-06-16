@@ -1,4 +1,3 @@
-// @ts-nocheck
 const { RecordId } = input.config()
 
 const onboardingTable = base.getTable("Onboarding")
@@ -74,7 +73,7 @@ async function updateOrCreate(){
 
 /**
  * Map the Ropu type from the onboarding table to the Ropu Table
- * @param {string} onboarding table ropu type field select option id
+ * @param {string} onboardingRopuTypeOptionId field select option id
  * @return {string} ropu table type field select option id
 */
 function mapRopuTypeOptionId(onboardingRopuTypeOptionId){
@@ -104,13 +103,13 @@ function mapRopuTypeOptionId(onboardingRopuTypeOptionId){
         case "selXEyRtGoAhfWcW0":
             return "selDmUWtQ1sSPgziu"
         default:
-            return null
+            return ''
     }
 }
 
 /**
  * Map the Single Select Option Id for the General Waste Bin Volume field
- * @param {string} onboarding bin volume select option id
+ * @param {string} onboardingBinVolumeOptionId field select option id
  * @return {string} ropu preferred bin volume select option id
 */
 function mapRopuBinVolumeOptionId(onboardingBinVolumeOptionId){
@@ -146,7 +145,7 @@ function mapRopuBinVolumeOptionId(onboardingBinVolumeOptionId){
 
 /**
  * Map the Single Select Option Id for the Preferred Comms field
- * @param {string} onboarding preferred comms select option id
+ * @param {string} onboardingCommsOptionId field select option id
  * @return {string} ropu preferred comms select option id
 */
 function mapRopuCommsOptionId(onboardingCommsOptionId){
