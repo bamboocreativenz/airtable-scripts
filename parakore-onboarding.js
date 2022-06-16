@@ -31,6 +31,10 @@ const missingRecordsMDList = 'Missing:'.concat(
     record.getCellValue('Kaiārahi') == null ? '\n - Kaiārahi' : ''
 )
 
+/* -------------------------------------------------------------------------- */
+/*                                 Driver Code                                */
+/* -------------------------------------------------------------------------- */
+
 if (record.getCellValue('Rōpū Email') != null && record.getCellValue('Rohe') != null && record.getCellValue('Kaiārahi') != null) {
     updateOrCreate()
     onboardingTable.updateRecordAsync(record.id,{"Missing Data Reason": ''})
@@ -60,8 +64,13 @@ async function updateOrCreate(){
     }
 }
 
-//console.log(ropuTable.fields.find(f => f.name == 'Type'))
-//console.log(onboardingTable.fields.find(f => f.name == 'Ropu Type'))
+/* -------------------------------------------------------------------------- */
+/*                       Select Options Mapping Switches                      */
+/* -------------------------------------------------------------------------- */
+
+// Use console logs like the below to get the ids for the fields you looking at
+// console.log(ropuTable.fields.find(f => f.name == 'Preferred Comms'))
+// console.log(onboardingTable.fields.find(f => f.name == 'Best Comms'))
 
 /**
  * Map the Ropu type from the onboarding table to the Ropu Table
@@ -69,7 +78,7 @@ async function updateOrCreate(){
  * @param {string} onboarding table ropu type field select option id
  * @return {string} ropu table type field select option id
 */
-function getRopuTypeOptionId(onboardingRopuTypeOptionId){
+function mapRopuTypeOptionId(onboardingRopuTypeOptionId){
     switch (onboardingRopuTypeOptionId){
         // Marae
         case "selBWnpBpPolJAVMo":
@@ -101,11 +110,11 @@ function getRopuTypeOptionId(onboardingRopuTypeOptionId){
 }
 
 /**
- * Get Select Id for Ropu Table Bin Volume field 
- * @param {string} name
- * @return {string} select option id
+ * Map the Single Select Option Id for the General Waste Bin Volume field
+ * @param {string} onboarding bin volume select option id
+ * @return {string} ropu preferred bin volume select option id
 */
-function getRopuBinVolumeOptionId(onboardingBinVolumeOptionId){
+function mapRopuBinVolumeOptionId(onboardingBinVolumeOptionId){
     switch (onboardingBinVolumeOptionId){
         // Food Compost Bin (25L)
         case "sel0BhWBe7HtplUCg":
@@ -136,6 +145,35 @@ function getRopuBinVolumeOptionId(onboardingBinVolumeOptionId){
     }
 }
 
+/**
+ * Map the Single Select Option Id for the Preferred Comms field
+ * @param {string} onboarding preferred comms select option id
+ * @return {string} ropu preferred comms select option id
+*/
+function mapRopuCommsOptionId(onboardingCommsOptionId){
+    switch (onboardingCommsOptionId){
+        // Phone
+        case "selz6UuuDqwRHJP5v":
+            return "selxYmmhF2tvbL2Uk"
+        // Text
+        case "seliqn5njyUQmISCg":
+            return "selFk4YncfKzGGxR9"
+        // Email
+        case "selPfK8o7GTvzOA29":
+            return "selE3xNl7gu1hF0PM"
+        // Visit
+        case "selPbx7EnlArY8QrF":
+            return "selW67ne8q3ZZ7uY2"
+        default:
+            return "selE3xNl7gu1hF0PM"
+    }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                       Create or Update Ropu Functions                      */
+/* -------------------------------------------------------------------------- */
+
+
 async function createRopu(){
     return await ropuTable.createRecordAsync({
         Name: record.getCellValue('Rōpū Name'),
@@ -144,8 +182,8 @@ async function createRopu(){
         "Rōpū Email": record.getCellValue('Rōpū Email') && record.getCellValue('Rōpū Email').trim(),
         "Profile Image": record.getCellValue('Rōpū Photo'),
         "Rohe": [{ id:record.getCellValue('Rohe')[0].id }],
-        "General Waste Bin Volume": {id: getRopuBinVolumeOptionId(record.getCellValue('fldZd8B9kNChlz8FI').id)},
-        Type: {id: getRopuTypeOptionId(record.getCellValue('fld62ZWMrxbt7aNzJ').id)},
+        "General Waste Bin Volume": {id: mapRopuBinVolumeOptionId(record.getCellValue('fldZd8B9kNChlz8FI').id)},
+        Type: {id: mapRopuTypeOptionId(record.getCellValue('fld62ZWMrxbt7aNzJ').id)},
         "General Recycling Bin Volume": record.getCellValue('General Recycling Volume'),
         "Glass Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
         "Plastic Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
@@ -158,7 +196,7 @@ async function createRopu(){
         "Arrival Process": record.getCellValue("Arrival Process"),
         "Support Now": record.getCellValue('Support Now'),
         "Support Ongoing": record.getCellValue('Support Ongoing'),
-        "Preferred Comms": record.getCellValue("Best Comms")[0],
+        "fldQgbr2vOUMIIWLm": {id: mapRopuCommsOptionId(record.getCellValue("fldQPHnd2f6uBTR5r").id)},
         "Signed Up": true,
         "Date Signed": record.getCellValue("Date Created"),
         Users: record.getCellValue("Kaiārahi"),
@@ -218,9 +256,6 @@ async function createRopu(){
     })
 }
 
-/**
- * @param {string} id
- */
 async function updateRopu(id){
     const ropuQuery = await ropuTable.selectRecordsAsync({fields: ropuTable.fields})
     const ropuRecord = ropuQuery.getRecord(id)
@@ -237,8 +272,8 @@ async function updateRopu(id){
             : record.getCellValue('Rōpū Photo'),
         // We need to concat the new value on the old in case one doesn't exist - than make sure we only return 1 as the field is meant to only have one rohe
         "Rohe": record.getCellValue('Rohe'),
-        "General Waste Bin Volume": {id: getRopuBinVolumeOptionId(record.getCellValue('fldZd8B9kNChlz8FI').id)},
-        Type: {id: getRopuTypeOptionId(record.getCellValue('fld62ZWMrxbt7aNzJ').id)},
+        "General Waste Bin Volume": {id: mapRopuBinVolumeOptionId(record.getCellValue('fldZd8B9kNChlz8FI').id)},
+        Type: {id: mapRopuTypeOptionId(record.getCellValue('fld62ZWMrxbt7aNzJ').id)},
         "General Recycling Bin Volume": record.getCellValue('General Recycling Volume'),
         "Glass Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
         "Plastic Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
@@ -251,7 +286,7 @@ async function updateRopu(id){
         "Arrival Process": record.getCellValue("Arrival Process"),
         "Support Now": record.getCellValue('Support Now'),
         "Support Ongoing": record.getCellValue('Support Ongoing'),
-        "Preferred Comms": record.getCellValue("Best Comms")[0],
+        "fldQgbr2vOUMIIWLm": {id: mapRopuCommsOptionId(record.getCellValue("fldQPHnd2f6uBTR5r").id)},
         "Signed Up": true,
         "Date Signed": record.getCellValue("Date Created"),
         Users: record.getCellValue("Kaiārahi"),
