@@ -60,15 +60,17 @@ async function updateOrCreate(){
     }
 }
 
+//console.log(ropuTable.fields.find(f => f.name == 'Type'))
 //console.log(onboardingTable.fields.find(f => f.name == 'Ropu Type'))
 
 /**
  * Map the Ropu type from the onboarding table to the Ropu Table
+ * Use something like `console.log(ropuTable.fields.find(f => f.name == 'Type'))` to get the option ids for a select field
  * @param {string} onboarding table ropu type field select option id
  * @return {string} ropu table type field select option id
 */
-function mapRopuType(onboardingTypeOptionId){
-    switch (onboardingTypeOptionId){
+function getRopuTypeOptionId(onboardingRopuTypeOptionId){
+    switch (onboardingRopuTypeOptionId){
         // Marae
         case "selBWnpBpPolJAVMo":
             return "selrBmdLq00lkOjWc"
@@ -87,6 +89,12 @@ function mapRopuType(onboardingTypeOptionId){
         // Hāpori
         case "selJnZ9GTAeKpzngO":
             return "selCsKOYQIrTC1EAp"
+        // Not for profit < 500
+        case "selBb04ag6upbVs61":
+            return "selDmUWtQ1sSPgziu"
+        // Not for profit > 500
+        case "selXEyRtGoAhfWcW0":
+            return "selDmUWtQ1sSPgziu"
         default:
             return null
     }
@@ -97,31 +105,31 @@ function mapRopuType(onboardingTypeOptionId){
  * @param {string} name
  * @return {string} select option id
 */
-function getBinVolumeSelectId(name){
-    switch (name){
+function getRopuBinVolumeOptionId(onboardingBinVolumeOptionId){
+    switch (onboardingBinVolumeOptionId){
         // Food Compost Bin (25L)
-        case "Food Compost Bin (25L)":
+        case "sel0BhWBe7HtplUCg":
             return "selQkKc1UG5qtCNtR"
         // Crate (60ltr)
-        case "Crate (60ltr)":
+        case "selhgvmn0jj7KRaST":
             return "seliijfShodLH1uQD"
         // Standard Black Bag (65L)
-        case "Standard Black Bag (65L)":
+        case "selsOd0k7qiDdhheX":
             return "selWLvjN7H9FIbINx"
         // Big Ben Black Bag (80L)
-        case "Big Ben Black Bag (80L)":
+        case "selItgB3Ai4xJLru8":
             return "selJXZWCD2UtALw0x"
         // Small Wheelie Bin (140L)
-        case "Small Wheelie Bin (140L)":
+        case "sel5jW37bJy6ewlKe":
             return "sel1kJKDTWTfNW9H7"
         // Green Bin (240L)
-        case "Green Bin (240L)":
+        case "selidrwfKS2yy74GF":
             return "selcYqT9Wrzju10Pl"
         // Small Skip (1000L)
-        case "Small Skip (1000L)":
+        case "sellHJ1gBzweAptNf":
             return "selr7d4VvmpP5LKmB"
         // Standard Skip (2000L)
-        case "Standard Skip (2000L)":
+        case "selK34LrLkFZ2c0zX":
             return "selhPKHeXA69F9FDv"
         default:
             return "selcYqT9Wrzju10Pl"
@@ -136,8 +144,8 @@ async function createRopu(){
         "Rōpū Email": record.getCellValue('Rōpū Email') && record.getCellValue('Rōpū Email').trim(),
         "Profile Image": record.getCellValue('Rōpū Photo'),
         "Rohe": [{ id:record.getCellValue('Rohe')[0].id }],
-        "General Waste Bin Volume": {id: getBinVolumeSelectId(record.getCellValue('General Waste Volume').name)},
-        Type: {id: mapRopuType(record.getCellValue('Ropu Type').id)},
+        "General Waste Bin Volume": {id: getRopuBinVolumeOptionId(record.getCellValue('fldZd8B9kNChlz8FI').id)},
+        Type: {id: getRopuTypeOptionId(record.getCellValue('fld62ZWMrxbt7aNzJ').id)},
         "General Recycling Bin Volume": record.getCellValue('General Recycling Volume'),
         "Glass Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
         "Plastic Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
@@ -229,8 +237,8 @@ async function updateRopu(id){
             : record.getCellValue('Rōpū Photo'),
         // We need to concat the new value on the old in case one doesn't exist - than make sure we only return 1 as the field is meant to only have one rohe
         "Rohe": record.getCellValue('Rohe'),
-        "General Waste Bin Volume": {id: getBinVolumeSelectId(record.getCellValue('General Waste Volume').name)},
-        Type: {id: mapRopuType(record.getCellValue('Ropu Type').id)},
+        "General Waste Bin Volume": {id: getRopuBinVolumeOptionId(record.getCellValue('fldZd8B9kNChlz8FI').id)},
+        Type: {id: getRopuTypeOptionId(record.getCellValue('fld62ZWMrxbt7aNzJ').id)},
         "General Recycling Bin Volume": record.getCellValue('General Recycling Volume'),
         "Glass Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
         "Plastic Recycling Bin Volume": record.getCellValue('Other Recycling Volume'),
