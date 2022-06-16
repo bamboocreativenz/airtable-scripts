@@ -74,7 +74,6 @@ async function updateOrCreate(){
 
 /**
  * Map the Ropu type from the onboarding table to the Ropu Table
- * Use something like `console.log(ropuTable.fields.find(f => f.name == 'Type'))` to get the option ids for a select field
  * @param {string} onboarding table ropu type field select option id
  * @return {string} ropu table type field select option id
 */
