@@ -1,0 +1,100 @@
+const categoriesTable = base.getTable('tblY4ttR57YEJrGKc')
+const orgsTable = base.getTable('tblzP2rWmac39XrbD')
+const transactionsTable = base.getTable('tblIgM7MNsBzjoYjP')
+
+const categoriesQuery = await categoriesTable.selectRecordsAsync({fields: ['Name']})
+const orgsQuery = await orgsTable.selectRecordsAsync({fields: ['Name', 'Relationship Type']})
+const transactionsQuery = await transactionsTable.selectRecordsAsync({fields: 
+    [
+        'Relationship Type',
+        'Sync Origin Org',
+        'Origin Org', 
+        'Sync Destination Org',
+        'Destination Org', 
+        'Sync Category',
+        'Category'
+    ]
+})
+
+let orgCreates = []
+let transactionUpdates = []
+
+transactionsQuery.recordIds.forEach(id => {
+    let transactionUpdate = {id: id, fields: {}}
+    const relationshipType = transactionsQuery.getRecord(id).getCellValueAsString('Relationship Type')
+
+    // Get data out of transaction & look it up in the appropriate table
+    const transactionCategory = transactionsQuery.getRecord(id).getCellValueAsString('Category')
+    const transactionSyncCategory = transactionsQuery.getRecord(id).getCellValueAsString('Sync Category')
+    const foundCategory = categoriesQuery.recordIds
+        .filter(o => categoriesQuery.getRecord(o).name == transactionSyncCategory)
+
+    const transactionOriginOrg = transactionsQuery.getRecord(id).getCellValueAsString('Origin Org')
+    const transactionSyncOriginOrg = transactionsQuery.getRecord(id).getCellValueAsString('Sync Origin Org')
+    const foundOriginOrg = orgsQuery.recordIds
+        .filter(o => orgsQuery.getRecord(o).name == transactionSyncOriginOrg)
+
+    const transactionDestinationOrg = transactionsQuery.getRecord(id).getCellValueAsString('Destination Org')
+    const transactionSyncDestinationOrg = transactionsQuery.getRecord(id).getCellValueAsString('Sync Destination Org')
+    const foundDestinationOrg = orgsQuery.recordIds
+        .filter(o => orgsQuery.getRecord(o).name == transactionSyncDestinationOrg)
+
+    if(exists(transactionSyncCategory) && exists(foundCategory) && !exists(transactionCategory)) {
+        transactionUpdate.fields['Category'] = foundCategory.map(m => ({id: m}))
+    }
+
+    if(exists(transactionSyncOriginOrg) && !exists(transactionOriginOrg)) {
+        if(exists(foundOriginOrg)) {
+            transactionUpdate.fields['Origin Org'] = foundOriginOrg.map(m => ({id: m}))
+        } else {
+            orgCreates.push(transactionSyncOriginOrg + '|**' + relationshipType)
+        }
+    }
+
+    if(exists(transactionSyncDestinationOrg && !exists(transactionDestinationOrg))) {
+        if(exists(foundDestinationOrg)) {
+            transactionUpdate.fields['Destination Org'] = foundDestinationOrg.map(m => ({id: m}))
+        } else {
+            orgCreates.push(transactionSyncDestinationOrg + '|**' + relationshipType)
+        }
+    }
+
+    transactionUpdates.push(transactionUpdate)
+})
+
+// create unique set of orgs to create
+const uniqueOrgs = [...new Set(orgCreates)];
+
+let orgs = uniqueOrgs.map(o => {
+    const splitValues = o.split('|**')
+    return {
+        fields: {
+            Name: splitValues[0],
+            'Relationship Type': splitValues[1] 
+        }
+    }
+})
+
+output.markdown(`Updating ${transactionUpdates.length} records`);
+while (transactionUpdates.length > 0) {
+  await transactionsTable.updateRecordsAsync(transactionUpdates.slice(0, 50));
+  transactionUpdates = transactionUpdates.slice(50);
+}
+output.markdown(`Creating ${uniqueOrgs.length} records`);
+while (orgs.length > 0) {
+  await orgsTable.createRecordsAsync(orgs.slice(0, 50));
+  orgs = orgs.slice(50);
+}
+output.markdown("**Done**");
+
+function exists (data){
+    if (data === undefined) {
+        return false
+    } else if (data === null) {
+        return false
+    } else if (data.length === 0) {
+        return false
+    } else {
+        return true
+    }
+}
