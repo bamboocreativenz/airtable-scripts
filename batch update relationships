@@ -32,12 +32,12 @@ transactionsQuery.recordIds.forEach(id => {
     const transactionOriginOrg = transactionsQuery.getRecord(id).getCellValueAsString('Origin Org')
     const transactionSyncOriginOrg = transactionsQuery.getRecord(id).getCellValueAsString('Sync Origin Org')
     const foundOriginOrg = orgsQuery.recordIds
-        .filter(o => orgsQuery.getRecord(o).name == transactionSyncOriginOrg)
+        .filter(o => orgsQuery.getRecord(o).name == transactionSyncOriginOrg && orgsQuery.getRecord(o).getCellValueAsString('Relationship Type') == relationshipType)
 
     const transactionDestinationOrg = transactionsQuery.getRecord(id).getCellValueAsString('Destination Org')
     const transactionSyncDestinationOrg = transactionsQuery.getRecord(id).getCellValueAsString('Sync Destination Org')
     const foundDestinationOrg = orgsQuery.recordIds
-        .filter(o => orgsQuery.getRecord(o).name == transactionSyncDestinationOrg)
+        .filter(o => orgsQuery.getRecord(o).name == transactionSyncDestinationOrg && orgsQuery.getRecord(o).getCellValueAsString('Relationship Type') == relationshipType)
 
     if(exists(transactionSyncCategory) && exists(foundCategory) && !exists(transactionCategory)) {
         transactionUpdate.fields['Category'] = foundCategory.map(m => ({id: m}))
