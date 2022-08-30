@@ -19,23 +19,30 @@ const transactionsQuery = await transactionsTable.selectRecordsAsync({fields:
 let orgCreates = []
 let transactionUpdates = []
 
-transactionsQuery.recordIds.forEach(id => {
-    let transactionUpdate = {id: id, fields: {}}
-    const relationshipType = transactionsQuery.getRecord(id).getCellValueAsString('Relationship Type')
+const transactionsMissingOrgsAndCategory = transactionsQuery.records
+    .filter(f => 
+        !exists(f.getCellValueAsString('Category')) 
+        && !exists(f.getCellValueAsString('Origin Org')) 
+        || !exists(f.getCellValueAsString('Destination Org'))
+    )
+
+transactionsMissingOrgsAndCategory.forEach(record => {
+    let transactionUpdate = {id: record.id, fields: {}}
+    const relationshipType = record.getCellValueAsString('Relationship Type')
 
     // Get data out of transaction & look it up in the appropriate table
-    const transactionCategory = transactionsQuery.getRecord(id).getCellValueAsString('Category')
-    const transactionSyncCategory = transactionsQuery.getRecord(id).getCellValueAsString('Sync Category')
+    const transactionCategory = record.getCellValueAsString('Category')
+    const transactionSyncCategory = record.getCellValueAsString('Sync Category')
     const foundCategory = categoriesQuery.recordIds
         .filter(o => categoriesQuery.getRecord(o).name == transactionSyncCategory)
 
-    const transactionOriginOrg = transactionsQuery.getRecord(id).getCellValueAsString('Origin Org')
-    const transactionSyncOriginOrg = transactionsQuery.getRecord(id).getCellValueAsString('Sync Origin Org')
+    const transactionOriginOrg = record.getCellValueAsString('Origin Org')
+    const transactionSyncOriginOrg = record.getCellValueAsString('Sync Origin Org')
     const foundOriginOrg = orgsQuery.recordIds
         .filter(o => orgsQuery.getRecord(o).name == transactionSyncOriginOrg && orgsQuery.getRecord(o).getCellValueAsString('Relationship Type') == relationshipType)
 
-    const transactionDestinationOrg = transactionsQuery.getRecord(id).getCellValueAsString('Destination Org')
-    const transactionSyncDestinationOrg = transactionsQuery.getRecord(id).getCellValueAsString('Sync Destination Org')
+    const transactionDestinationOrg = record.getCellValueAsString('Destination Org')
+    const transactionSyncDestinationOrg = record.getCellValueAsString('Sync Destination Org')
     const foundDestinationOrg = orgsQuery.recordIds
         .filter(o => orgsQuery.getRecord(o).name == transactionSyncDestinationOrg && orgsQuery.getRecord(o).getCellValueAsString('Relationship Type') == relationshipType)
 
