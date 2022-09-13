@@ -1,12 +1,12 @@
 const { RecordId } = input.config()
 
-const onboardingTable = base.getTable("Onboarding")
-const ropuTable = base.getTable("Ropu")
-const wasteTable = base.getTable("Waste Log")
-const hazardsTable = base.getTable("Hazards")
-const peopleTable = base.getTable("People")
-const iwiTable = base.getTable("Iwi/Hapu")
-const quarterTable = base.getTable('Quarterly Reports')
+const onboardingTable = base.getTable("tbljmUaXGCRN4ks5Q")
+const ropuTable = base.getTable("tblTtWjivzuMNRopv")
+const wasteTable = base.getTable("tbllT1hPEBfbcxP8P")
+const hazardsTable = base.getTable("tblBdiTMr1g2uEaJr")
+const peopleTable = base.getTable("tblNesXcVSJlujjtZ")
+const iwiTable = base.getTable("tbla2eFHmP9505HEI")
+const quarterTable = base.getTable('tbl89DzUOFQZ0yXwD')
 
 // Calculate current Quarter
 const date = new Date(), y = date.getFullYear(), m = date.getMonth() + 1;
@@ -94,7 +94,7 @@ function mapRopuTypeOptionId(onboardingRopuTypeOptionId){
         case "selZ3zkt8tsRGNMQw":
             return "selyzuAUqTCIFZ5dP"
         // Hāpori
-        case "selJnZ9GTAeKpzngO":
+        case "selOLBFkT28qMG7I7":
             return "selCsKOYQIrTC1EAp"
         // Not for profit < 500
         case "selBb04ag6upbVs61":
@@ -102,6 +102,9 @@ function mapRopuTypeOptionId(onboardingRopuTypeOptionId){
         // Not for profit > 500
         case "selXEyRtGoAhfWcW0":
             return "selDmUWtQ1sSPgziu"
+        // Eco Church
+        case "selJnZ9GTAeKpzngO":
+            return "selHzDkmXHNEhmiUX"
         default:
             return ''
     }
@@ -198,7 +201,7 @@ async function createRopu(){
         "Signed Up": true,
         "Date Signed": record.getCellValue("Date Created"),
         Users: record.getCellValue("Kaiārahi"),
-        "Regional Contacts": record.getCellValue("Council"),
+        "Regional Partners": record.getCellValue("Council"),
         Onboarding: [{id: RecordId}],
         Tags: record.getCellValue('Tags'),
         "PK Metrics": [{id: 'reczaOiu8zwtxeBYZ'}]
@@ -288,11 +291,11 @@ async function updateRopu(id){
         "Signed Up": true,
         "Date Signed": record.getCellValue("Date Created"),
         Users: record.getCellValue("Kaiārahi"),
-        "Regional Contacts": 
-            ropuRecord.getCellValue('Regional Contacts') != null
+        "Regional Partners": 
+            ropuRecord.getCellValue("Regional Partners") != null
             ? record.getCellValue('Council') != null
-            ? [{id:record.getCellValue('Council').concat(ropuRecord.getCellValue('Regional Contacts'))[0].id}]
-            : ropuRecord.getCellValue('Regional Contacts')
+            ? [{id:record.getCellValue('Council').concat(ropuRecord.getCellValue("Regional Partners"))[0].id}]
+            : ropuRecord.getCellValue("Regional Partners")
             : record.getCellValue('Council'),
         Onboarding: [{id: RecordId}],
         Tags: record.getCellValue('Tags'),
