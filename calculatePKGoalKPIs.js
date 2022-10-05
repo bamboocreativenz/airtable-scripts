@@ -1,10 +1,16 @@
 const goalsTable = base.getTable('Kaiarahi Goals')
 const ropuTable = base.getTable('Ropu')
 const huiLogsTable = base.getTable('Ropu Hui Log')
+const storiesTable = base.getTable('Ropu Stories')
+const equipmentTable = base.getTable('Ropu Equipment')
+const eventsTable = base.getTable('Events')
 
-const goals = await goalsTable.selectRecordsAsync({fields: ['Type', 'Kaiārahi', 'Quarter Start', 'Quarter End']})
-const ropu = await ropuTable.selectRecordsAsync({fields: ['Date Signed', 'Kaiārahi']})
-const hui = await huiLogsTable.selectRecordsAsync({fields: ['_date', 'Kaiārahi', 'Type']})
+const goals = await goalsTable.selectRecordsAsync({fields: ['Kaiārahi', 'Type', 'Quarter Start', 'Quarter End', 'Quarter Manual']})
+const ropu = await ropuTable.selectRecordsAsync({fields: ['Kaiārahi', 'Date Signed', 'Waste Entries Count', 'Quarters Waste Diverted']})
+const hui = await huiLogsTable.selectRecordsAsync({fields: ['Kaiārahi', '_date', 'Type']})
+const stories = await storiesTable.selectRecordsAsync({fields: ['Kaiārahi', 'Story Date']})
+const equipment = await equipmentTable.selectRecordsAsync({fields: ['Kaiārahi', 'Created Date']})
+const events = await eventsTable.selectRecordsAsync({fields: ['Kaiārahi', 'Date']})
 
 function includesArray(arr1, arr2){
     if(arr1 === null) return false
@@ -59,44 +65,66 @@ function huiLogCategory(selectId){
     }
 }
 
-// The Goal type is a single select
-const goalTypes = { 
-    //Sign Ups
-    selNoxulKxjmjv51D: calculateSignedUp,
-    //Wānanga
-    sel1zL06dDb2ZkOGp: calculateWananga,
-    //Number tracking waste
-    selAY7UvaxhznPYZJ: calculateSignedUp,
-    //Stories of Change
-    sel1fUF2WYLUQs1ip: calculateSignedUp,
-    //Equipment setup
-    selFHYSZzWcdKQq6H: calculateSignedUp,
-    //Events
-    selntYyWJuYov8Hm1: calculateSignedUp,
-    //Presentations
-    selXNaAFOWkOi0yp4: calculateSignedUp,
-    //Compost Wānanga
-    sel6ofR9Rek0MAo9R: calculateSignedUp,
-    //Microgreens Wānanga
-    selqKj7raZAaNJRSR: calculateSignedUp,
-    //Ikura Wānanga
-    selH8YVLyU8PGwjd6: calculateSignedUp,
-    //50% reduction of waste
-    selADMsf4uPpg9AZ0: calculateSignedUp,
-    //Support Committee Hui
-    sel4bNoidZdH2Umlp: calculateSignedUp,
-    //Facebook Posts
-    sel2kIHOCwI8A2i0T: calculateSignedUp,
-    //Other
-    selxCHf7TZ1PP8tjz: calculateSignedUp,
-    //Waste Check Wānanga
-    selAm0ZpN6tGMfhss: calculateSignedUp,
-    //Kope Toitū Wānanga
-    selMRmgZ6J7Ct38wl: calculateSignedUp,
-    //Māra Wānanga
-    selhWPqyIMIMSmWCP: calculateSignedUp,
-    //Wai Māori Wānanga
-    selp4eyhrguw9XFah: calculateSignedUp,
+function getGoalCalculation(selectId){ 
+    switch(selectId) {
+        //Sign Ups
+        case 'selNoxulKxjmjv51D':
+            return calculateSignedUp
+        //Wānanga
+        case 'sel1zL06dDb2ZkOGp':
+            return calculateHui('wananga')
+        //Number tracking waste
+        case 'selAY7UvaxhznPYZJ':
+            return calculateRopuTrackingWaste
+        //Stories of Change
+        case 'sel1fUF2WYLUQs1ip':
+            return calculateStoriesOfChange
+        //Equipment setup
+        case 'selFHYSZzWcdKQq6H':
+            return calculateEquipment
+        //Events
+        case 'selntYyWJuYov8Hm1':
+            return calculateEvents
+        //Presentations
+        case 'selXNaAFOWkOi0yp4':
+            return calculateHui('presentation')
+        //Compost Wānanga
+        case 'sel6ofR9Rek0MAo9R':
+            return calculateHui('wananga', 'seleVUMS6Gv97fo5n')
+        //Microgreens Wānanga
+        case 'selqKj7raZAaNJRSR':
+            return calculateHui('wananga', 'sellwu7y2HhoBpDUU')
+        //Ikura Wānanga
+        case 'selH8YVLyU8PGwjd6':
+            return calculateHui('wananga', 'selWHMGlVr0j96Okd')
+        //50% reduction of waste
+        case 'selADMsf4uPpg9AZ0':
+            return calculateReduction
+        //Support Committee Hui
+        case 'sel4bNoidZdH2Umlp':
+            return calculateManual
+        //Facebook Posts
+        case 'sel2kIHOCwI8A2i0T':
+            return calculateManual
+        //Other
+        case 'selxCHf7TZ1PP8tjz':
+            return calculateManual
+        //Waste Check Wānanga
+        case 'selAm0ZpN6tGMfhss':
+            return calculateHui('wananga', 'selGPRlpHzXg60doU')
+        //Kope Toitū Wānanga
+        case 'selMRmgZ6J7Ct38wl':
+            return calculateHui('wananga', 'sel1h7STOxuuCsCc6')
+        //Māra Wānanga
+        case 'selhWPqyIMIMSmWCP':
+            return calculateHui('wananga', 'selWEFTcXKjlKmRhs')
+        //Wai Māori Wānanga
+        case 'selp4eyhrguw9XFah':
+            return calculateHui('wananga', 'sele3x3xsUl65qjGA')
+        default:
+            return () => 0
+    }
+
 }
 
 function filterQuarterRecords(table, start, end, dateFieldName, kaiarahi){
@@ -116,27 +144,67 @@ function calculateSignedUp(start, end, kaiarahi){
     return records.length
 }
 
-function calculateWananga(start, end, kaiarahi){
-    const records = filterQuarterRecords(hui, start, end, '_date', kaiarahi)
-    // This is count of each wananga in the type column for each records.
-    // ie everything except the presentations and wanananga planning hui
-    return records.reduce((acc, next) => {
-        const wanangaTags = next.getCellValue('Type').filter(t => huiLogCategory(t.id) === 'wananga')
-        return acc + wanangaTags.length
-    }, 0)
+/**
+* @param {'presentation' | 'wananga' | 'planningHui'} category
+* @param {string} [typeId]
+*/
+function calculateHui(category, typeId){
+    return (start, end, kaiarahi) => {
+        const records = filterQuarterRecords(hui, start, end, '_date', kaiarahi)
+        // This is count of each wananga in the type column for each records.
+        // ie everything except the presentations and wanananga planning hui
+        return records.reduce((acc, next) => {
+            const wanangaTags = next.getCellValue('Type')
+                .filter(t => typeId 
+                    ? typeId === t.id && huiLogCategory(t.id) === category
+                    : huiLogCategory(t.id) === category
+                )
+            return acc + wanangaTags.length
+        }, 0)
+    }
 }
 
-function calculateActual(goalType){
-    // ALternative approach to switch: https://www.blog.wax-o.com/2015/05/an-alternative-to-if-else-and-switch-in-javascript/
-    return goalTypes[goalType.id] || calculateSignedUp
-} 
+function calculateRopuTrackingWaste(start, end, kaiarahi){
+    const records = filterQuarterRecords(ropu, start, end, 'Date Signed', kaiarahi)
+    const trackingWaste = records.filter(r => r.getCellValue('Waste Entries Count') > 1)
+    return trackingWaste.length
+}
+
+function calculateStoriesOfChange(start, end, kaiarahi){
+    const records = filterQuarterRecords(stories, start, end, 'Story Date', kaiarahi)
+    return records.length
+}
+
+function calculateEquipment(start, end, kaiarahi){
+    const records = filterQuarterRecords(equipment, start, end, 'Created Date', kaiarahi)
+    return records.length
+}
+
+function calculateEvents(start, end, kaiarahi){
+    const records = filterQuarterRecords(events, start, end, 'Date', kaiarahi)
+    return records.length
+}
+
+function calculateReduction(start, end, kaiarahi){
+    const records = ropu.records.filter(r => {
+        const quarters = r.getCellValue('Quarters Waste Diverted')
+        return quarters !== null
+            && quarters[quarters.length -1] <= -0.5
+            && includesArray(kaiarahi, r.getCellValue('Kaiārahi')) 
+    })
+    return records.length
+}
+
+function calculateManual(start, end, kaiarahi, manual){
+    return manual === null ? 0 : manual
+}
 
 let actuals = goals.records.map(goal => {
-    const getActual = calculateActual(goal.getCellValue('Type'))
+    const getActual = getGoalCalculation(goal.getCellValue('Type').id)
     return {
         id: goal.id,
         fields: {
-            'Quarter Actual': getActual(goal.getCellValue('Quarter Start'), goal.getCellValue('Quarter End'), goal.getCellValue('Kaiārahi'))
+        'Quarter Actual': getActual(goal.getCellValue('Quarter Start'), goal.getCellValue('Quarter End'), goal.getCellValue('Kaiārahi'), goal.getCellValue('Quarter Manual'))
         }
     }
 })
