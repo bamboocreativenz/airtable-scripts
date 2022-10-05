@@ -65,68 +65,6 @@ function huiLogCategory(selectId){
     }
 }
 
-function getGoalCalculation(selectId){ 
-    switch(selectId) {
-        //Sign Ups
-        case 'selNoxulKxjmjv51D':
-            return calculateSignedUp
-        //Wānanga
-        case 'sel1zL06dDb2ZkOGp':
-            return calculateHui('wananga')
-        //Number tracking waste
-        case 'selAY7UvaxhznPYZJ':
-            return calculateRopuTrackingWaste
-        //Stories of Change
-        case 'sel1fUF2WYLUQs1ip':
-            return calculateStoriesOfChange
-        //Equipment setup
-        case 'selFHYSZzWcdKQq6H':
-            return calculateEquipment
-        //Events
-        case 'selntYyWJuYov8Hm1':
-            return calculateEvents
-        //Presentations
-        case 'selXNaAFOWkOi0yp4':
-            return calculateHui('presentation')
-        //Compost Wānanga
-        case 'sel6ofR9Rek0MAo9R':
-            return calculateHui('wananga', 'seleVUMS6Gv97fo5n')
-        //Microgreens Wānanga
-        case 'selqKj7raZAaNJRSR':
-            return calculateHui('wananga', 'sellwu7y2HhoBpDUU')
-        //Ikura Wānanga
-        case 'selH8YVLyU8PGwjd6':
-            return calculateHui('wananga', 'selWHMGlVr0j96Okd')
-        //50% reduction of waste
-        case 'selADMsf4uPpg9AZ0':
-            return calculateReduction
-        //Support Committee Hui
-        case 'sel4bNoidZdH2Umlp':
-            return calculateManual
-        //Facebook Posts
-        case 'sel2kIHOCwI8A2i0T':
-            return calculateManual
-        //Other
-        case 'selxCHf7TZ1PP8tjz':
-            return calculateManual
-        //Waste Check Wānanga
-        case 'selAm0ZpN6tGMfhss':
-            return calculateHui('wananga', 'selGPRlpHzXg60doU')
-        //Kope Toitū Wānanga
-        case 'selMRmgZ6J7Ct38wl':
-            return calculateHui('wananga', 'sel1h7STOxuuCsCc6')
-        //Māra Wānanga
-        case 'selhWPqyIMIMSmWCP':
-            return calculateHui('wananga', 'selWEFTcXKjlKmRhs')
-        //Wai Māori Wānanga
-        case 'selp4eyhrguw9XFah':
-            return calculateHui('wananga', 'sele3x3xsUl65qjGA')
-        default:
-            return () => 0
-    }
-
-}
-
 function filterQuarterRecords(table, start, end, dateFieldName, kaiarahi){
     return table.records.filter(r => {
         const startDate = new Date(start)
@@ -197,6 +135,71 @@ function calculateReduction(start, end, kaiarahi){
 
 function calculateManual(start, end, kaiarahi, manual){
     return manual === null ? 0 : manual
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                 Driver Code                                */
+/* -------------------------------------------------------------------------- */
+
+function getGoalCalculation(selectId){ 
+    switch(selectId) {
+        //Sign Ups
+        case 'selNoxulKxjmjv51D':
+            return calculateSignedUp
+        //Wānanga
+        case 'sel1zL06dDb2ZkOGp':
+            return calculateHui('wananga')
+        //Number tracking waste
+        case 'selAY7UvaxhznPYZJ':
+            return calculateRopuTrackingWaste
+        //Stories of Change
+        case 'sel1fUF2WYLUQs1ip':
+            return calculateStoriesOfChange
+        //Equipment setup
+        case 'selFHYSZzWcdKQq6H':
+            return calculateEquipment
+        //Events
+        case 'selntYyWJuYov8Hm1':
+            return calculateEvents
+        //Presentations
+        case 'selXNaAFOWkOi0yp4':
+            return calculateHui('presentation')
+        //Compost Wānanga
+        case 'sel6ofR9Rek0MAo9R':
+            return calculateHui('wananga', 'seleVUMS6Gv97fo5n')
+        //Microgreens Wānanga
+        case 'selqKj7raZAaNJRSR':
+            return calculateHui('wananga', 'sellwu7y2HhoBpDUU')
+        //Ikura Wānanga
+        case 'selH8YVLyU8PGwjd6':
+            return calculateHui('wananga', 'selWHMGlVr0j96Okd')
+        //50% reduction of waste
+        case 'selADMsf4uPpg9AZ0':
+            return calculateReduction
+        //Support Committee Hui
+        case 'sel4bNoidZdH2Umlp':
+            return calculateManual
+        //Facebook Posts
+        case 'sel2kIHOCwI8A2i0T':
+            return calculateManual
+        //Other
+        case 'selxCHf7TZ1PP8tjz':
+            return calculateManual
+        //Waste Check Wānanga
+        case 'selAm0ZpN6tGMfhss':
+            return calculateHui('wananga', 'selGPRlpHzXg60doU')
+        //Kope Toitū Wānanga
+        case 'selMRmgZ6J7Ct38wl':
+            return calculateHui('wananga', 'sel1h7STOxuuCsCc6')
+        //Māra Wānanga
+        case 'selhWPqyIMIMSmWCP':
+            return calculateHui('wananga', 'selWEFTcXKjlKmRhs')
+        //Wai Māori Wānanga
+        case 'selp4eyhrguw9XFah':
+            return calculateHui('wananga', 'sele3x3xsUl65qjGA')
+        default:
+            return () => 0
+    }
 }
 
 let actuals = goals.records.map(goal => {
