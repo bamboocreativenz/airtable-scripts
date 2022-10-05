@@ -103,8 +103,7 @@ function calculateHui(category, typeId){
 }
 
 function calculateRopuTrackingWaste(start, end, kaiarahi){
-    const records = filterQuarterRecords(ropu, start, end, 'Date Signed', kaiarahi)
-    const trackingWaste = records.filter(r => r.getCellValue('Waste Entries Count') > 1)
+    const trackingWaste = ropu.records.filter(r => r.getCellValue('Waste Entries Count') > 0 && includesArray(kaiarahi, r.getCellValue('Kaiārahi')))
     return trackingWaste.length
 }
 
