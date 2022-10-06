@@ -203,10 +203,22 @@ function getGoalCalculation(selectId){
 
 let actuals = goals.records.map(goal => {
     const getActual = getGoalCalculation(goal.getCellValue('Type').id)
-    return {
-        id: goal.id,
-        fields: {
-        'Quarter Actual': getActual(goal.getCellValue('Quarter Start'), goal.getCellValue('Quarter End'), goal.getCellValue('Kaiārahi'), goal.getCellValue('Quarter Manual'))
+    const start = goal.getCellValue('Quarter Start')
+    const end = goal.getCellValue('Quarter End')
+    const kaiarahi = goal.getCellValue('Kaiārahi')
+    if(start != null && end != null && kaiarahi != null) {
+        return {
+            id: goal.id,
+            fields: {
+            'Quarter Actual': getActual(start, end, kaiarahi, goal.getCellValue('Quarter Manual'))
+            }
+        }
+    } else {
+        return {
+            id: goal.id,
+            fields: {
+                'Quarter Actual': null
+            }
         }
     }
 })
