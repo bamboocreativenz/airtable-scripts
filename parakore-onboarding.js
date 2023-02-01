@@ -16,7 +16,7 @@ const lastDay = new Date(y, (Math.ceil(m/4)*3), 0);
 const quarterQuery = await quarterTable.selectRecordsAsync({fields: quarterTable.fields})
 
 const quarter = quarterQuery.records.find((r) => {
-    return new Date(r.getCellValue('From')) >= firstDay && new Date(r.getCellValue('To')) <= lastDay
+    return new Date(r.getCellValue('Start')) >= firstDay && new Date(r.getCellValue('End')) <= lastDay
 })
 
 // Onboarding Record
@@ -70,6 +70,9 @@ async function updateOrCreate(){
 // Use console logs like the below to get the ids for the fields you looking at
 // console.log(ropuTable.fields.find(f => f.name == 'Preferred Comms'))
 // console.log(onboardingTable.fields.find(f => f.name == 'Best Comms'))
+
+//console.log(onboardingTable.fields.filter(f=> f.name == 'General Waste Volume'))
+//console.log(ropuTable.fields.filter(f=> f.name == 'General Waste Bin Volume'))
 
 /**
  * Map the Ropu type from the onboarding table to the Ropu Table
@@ -141,6 +144,8 @@ function mapRopuBinVolumeOptionId(onboardingBinVolumeOptionId){
         // Standard Skip (2000L)
         case "selK34LrLkFZ2c0zX":
             return "selhPKHeXA69F9FDv"
+        case "seleSMzorl3RBB3xA":
+            return "selqw4Qst2dZwloB5"
         default:
             return "selcYqT9Wrzju10Pl"
     }
@@ -200,7 +205,7 @@ async function createRopu(){
         "fldQgbr2vOUMIIWLm": {id: mapRopuCommsOptionId(record.getCellValue("fldQPHnd2f6uBTR5r").id)},
         "Signed Up": true,
         "Date Signed": record.getCellValue("Date Created"),
-        Users: record.getCellValue("Kaiārahi"),
+        'Kaiārahi': record.getCellValue("Kaiārahi"),
         "Regional Partners": record.getCellValue("Council"),
         Onboarding: [{id: RecordId}],
         Tags: record.getCellValue('Tags'),
@@ -230,7 +235,7 @@ async function createRopu(){
             "Number of Garden Waste Composting bins": record.getCellValue('Organic/Garden Waste Last Month'),
             // TODO "": record.getCellValue('Other Recycling Last Month'),
             "Number of Food Composting bins": record.getCellValue('Food Waste Last Month'),
-            Users: record.getCellValue("Kaiārahi"),
+            "Kaiārahi": record.getCellValue("Kaiārahi"),
             Ropu: [{id: ropuId}],
             Baseline: true,
             Quarter: quarter ? [{id: quarter.id}] : undefined
@@ -290,7 +295,7 @@ async function updateRopu(id){
         "fldQgbr2vOUMIIWLm": {id: mapRopuCommsOptionId(record.getCellValue("fldQPHnd2f6uBTR5r").id)},
         "Signed Up": true,
         "Date Signed": record.getCellValue("Date Created"),
-        Users: record.getCellValue("Kaiārahi"),
+        "Kaiārahi": record.getCellValue("Kaiārahi"),
         "Regional Partners": 
             ropuRecord.getCellValue("Regional Partners") != null
             ? record.getCellValue('Council') != null
@@ -324,7 +329,7 @@ async function updateRopu(id){
             "Number of Garden Waste Composting bins": record.getCellValue('Organic/Garden Waste Last Month'),
             // TODO "": record.getCellValue('Other Recycling Last Month'),
             "Number of Food Composting bins": record.getCellValue('Food Waste Last Month'),
-            Users: record.getCellValue("Kaiārahi"),
+            "Kaiārahi": record.getCellValue("Kaiārahi"),
             Ropu: [{id}],
             Baseline: true,
             Quarter: quarter ? [{id: quarter.id}] : undefined
