@@ -5,7 +5,10 @@ const techTable = base.getTable('Technologies')
 
 const charities = await charitiesTable.selectRecordsAsync({fields: ['Name', 'Website']})
 
-const tech = await fetch('https://wappalyzer-api-production.up.railway.app/extract?url=' + url)
+// Check URL for http(s)
+const newURL = /^((http|https):\/\/)/.test(url) ? url : 'https://' + url
+
+const tech = await fetch('https://wappalyzer-api-production.up.railway.app/extract?url=' + newURL)
 const data = await tech.json()
 
 // TECH TABLE
