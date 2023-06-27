@@ -39,18 +39,18 @@ if(res.ok) {
     })
 
     // DELETE CURRENT SEARCH RESULTS
-    const allData = await charitiesTable.selectRecordsAsync({fields: ['Name', 'Technology']})
-    let records = allData.records.filter(r => r.getCellValue('Technology') == null || undefined)
+    const allData = await charitiesTable.selectRecordsAsync({fields: ['Name', 'Technology Joins']})
+    let records = allData.records.filter(r => r.getCellValue('Technology Joins') == null || undefined)
 
     while (records.length > 0){
         await charitiesTable.deleteRecordsAsync(records.slice(0, 50))
         records = records.slice(50)
     }
 
-    const existingCharities = allData.records.filter(r => r.getCellValue('Technology') != null || undefined)
+    const existingCharities = allData.records.filter(r => r.getCellValue('Technology Joins') != null || undefined)
 
     let charitiesToCreate = charities.filter(c => {
-        return existingCharities.find(f => f.getCellValue('Website') == c.fields.Website) == undefined
+        return existingCharities.find(f => f.getCellValue('Name') == c.fields.Name) == undefined
     })
 
     // ADD NEW SEARCH RESULTS
